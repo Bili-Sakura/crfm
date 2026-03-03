@@ -9,11 +9,10 @@ from diffusers.image_processor import VaeImageProcessor
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from safetensors.torch import load_file
-from mmseg.apis import init_model
-
 from src.models.sd3_mmdit import MaskDit_sd3_5
 from src.utils.utils import encode_images
 from src.utils.crfm import inference_with_crfm
+from src.utils.seg_model import load_segmentation_model
 from src.datasets.infer_dataset import SegmentationDataset, collate_fn
 
 import torch
@@ -46,8 +45,10 @@ def parse_args(input_args=None):
     parser.add_argument("--num_cls", type=int, default=100)
     parser.add_argument("--skip", type=int, default=0)
     parser.add_argument("--datameta", type=str, default=None,)
-    parser.add_argument("--mmseg_config",type=str,default='')
-    parser.add_argument("--mmseg_ckpt",type=str,default='')
+    parser.add_argument("--seg_model_path",type=str,default='',
+                        help="Path to a transformers pretrained segmentation model or model id.")
+    parser.add_argument("--seg_model_ckpt",type=str,default='',
+                        help="Optional path to a PyTorch segmentation model checkpoint (.pth).")
     parser.add_argument("--num_inference_steps", type=int, default=28)
     parser.add_argument("--rectified_step", type=int, default=4)
 
@@ -111,7 +112,13 @@ def main(args):
     ).to(accelerator.device, dtype=weight_dtype)
     vae_scale_factor = 2 ** (len(vae.config.block_out_channels) - 1)
     image_processor = VaeImageProcessor(vae_scale_factor=vae_scale_factor)
-    control_model = init_model(args.mmseg_config, checkpoint=args.mmseg_ckpt).to(accelerator.device, dtype=weight_dtype)
+    control_model = load_segmentation_model(
+        model_path=args.seg_model_path,
+        checkpoint_path=args.seg_model_ckpt if args.seg_model_ckpt else None,
+        num_classes=args.num_cls,
+        device=accelerator.device,
+        dtype=weight_dtype,
+    )
 
     transformer.requires_grad_(False)
     vae.requires_grad_(False)
