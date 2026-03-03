@@ -24,6 +24,7 @@ import argparse
 import json
 import os
 import shutil
+from typing import Optional
 
 import torch
 from diffusers import AutoencoderKL, FlowMatchEulerDiscreteScheduler, SD3Transformer2DModel
@@ -35,7 +36,7 @@ from src.models.sd3_mmdit import MaskDit_sd3_5
 def convert_checkpoint(
     pretrained_model_name_or_path: str,
     output_dir: str,
-    mmdit_ckpt: str | None = None,
+    mmdit_ckpt: Optional[str] = None,
     dtype_str: str = "fp32",
 ) -> str:
     """Build the full MaskDit_sd3_5 model, optionally load trained weights,

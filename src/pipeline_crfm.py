@@ -109,7 +109,7 @@ class CRFMPipeline(DiffusionPipeline):
         batch_size = prompt_embeds.shape[0]
         latents_width = int(width / self.vae_scale_factor)
         latents_height = int(height / self.vae_scale_factor)
-        num_channels_latents = self.transformer._config.in_channels
+        num_channels_latents = self.transformer.config.in_channels
 
         if initial_latents is None:
             latents = _prepare_latents(

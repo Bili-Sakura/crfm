@@ -35,9 +35,9 @@ pip install -r requirements.txt
 pip install xformers
 ```
 
-> **Note:** This project no longer requires ``mmcv``, ``mmengine``, or
-> ``mmsegmentation``.  All functionality uses PyTorch (2.0+) with
-> ``diffusers`` and ``transformers``.
+> **Note:** This project no longer requires `mmcv`, `mmengine`, or
+> `mmsegmentation`.  All functionality uses PyTorch (2.0+) with
+> `diffusers` and `transformers`.
 
 ## Checkpoint conversion
 
