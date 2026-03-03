@@ -7,7 +7,7 @@ python crfm_test.py \
     --batch_size 1 \
     --debug 1 \
     --num_cls 18 \
-    --mmseg_config xx \
-    --mmseg_ckpt xx \
+    --seg_model_path xx \
+    --seg_model_ckpt xx \
     --num_inference_steps 23 \
     --rectified_step 4

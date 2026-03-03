@@ -45,8 +45,7 @@ def control_rf_matching(
 
     image_preds = image_processor.postprocess(image_preds, output_type='pt').clamp(0, 1)
     image_preds = normalize(image_preds, (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)).to(dtype=weight_dtype)
-    label_preds = conditional_model.predict(image_preds)
-    label_preds = torch.cat([pred.seg_logits.data.unsqueeze(0) for pred in label_preds])
+    label_preds = conditional_model(image_preds)
     conditional_loss = nn.functional.cross_entropy(label_preds, conditions, ignore_index=ignore_index, reduction='none')
     valid_mask = ((conditions != 255) * (label_preds.argmax(1) != conditions)).float()
     conditional_loss = (valid_mask * conditional_loss).sum(dim=(-1,-2)) / (valid_mask.sum(dim=(-1,-2)) + 1e-10)

@@ -32,31 +32,31 @@ The overall workflow of the task-oriented data synthesis framework (TODSynth) co
 conda create -n crfm python=3.11
 conda activate crfm
 pip install -r requirements.txt
-pip3 install -U openmim
-mim install mmengine
-mim install "mmcv==2.1.0" 
-pip3 install "mmsegmentation>=1.0.0"
 pip install xformers
 ```
 
-### Optional (if mmengine throws an error)
-Then modify the loading logic of the `load_from_local` function located in `mmengine/runner/checkpoint.py` as:
+> **Note:** This project no longer requires ``mmcv``, ``mmengine``, or
+> ``mmsegmentation``.  All functionality uses PyTorch (2.0+) with
+> ``diffusers`` and ``transformers``.
+
+## Checkpoint conversion
+
+After training, convert the original checkpoint into a diffusers-compatible
+pipeline directory using the provided conversion script:
+
+```bash
+python scripts/convert_checkpoint.py \
+    --pretrained_model_name_or_path sd3.5_medium \
+    --mmdit_ckpt path/to/checkpoint/model.safetensors \
+    --output_dir converted_crfm_pipeline
+```
+
+The resulting directory can then be loaded with the custom pipeline:
+
 ```python
-def load_from_local(filename, map_location):
-    """Load checkpoint by local file path.
-
-    Args:
-        filename (str): local checkpoint file path
-        map_location (str, optional): Same as :func:`torch.load`.
-
-    Returns:
-        dict or OrderedDict: The loaded checkpoint.
-    """
-    filename = osp.expanduser(filename)
-    if not osp.isfile(filename):
-        raise FileNotFoundError(f'{filename} can not be found.')
-    checkpoint = torch.load(filename, map_location=map_location, weights_only=False)
-    return checkpoint
+from src.pipeline_crfm import CRFMPipeline
+pipe = CRFMPipeline.from_pretrained("converted_crfm_pipeline")
+pipe = pipe.to("cuda")
 ```
 
 ## Download Models
@@ -111,15 +111,17 @@ Some important arguments for configurations of inference are:
 
 ## Inference with CRFM
 
-The **CRFM** method relies on a pre-trained segmentation model. Please train the segmentation model on the training set to be generated (The segmentation model in this paper is implemented using the `MMSegmentation` lib).
+The **CRFM** method relies on a pre-trained segmentation model. You can use any
+PyTorch or HuggingFace ``transformers`` segmentation model (e.g. SegFormer,
+DeepLabV3). No ``mmsegmentation`` dependency is needed.
 
 ```bash
   sh crfm_test.sh
 ```
 
 Some parameters specifically set for the CRFM process:
-- `--mmseg_config`: The `.py` configuration file of the mmsegmentation model.
-- `--mmseg_ckpt`: The `.pth` checkpoint file of the mmsegmentation model.
+- `--seg_model_path`: Path to a transformers pretrained segmentation model or HuggingFace Hub model id.
+- `--seg_model_ckpt`: Optional path to a PyTorch segmentation model checkpoint (`.pth`).
 - `--rectified_step`: The number of steps rectified by the **CRFM** method.
 
 ## Model training
